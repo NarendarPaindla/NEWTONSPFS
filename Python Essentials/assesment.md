@@ -1,11 +1,3 @@
-Since students may have **mixed skill levels (some know basics, some don’t)** and this is for **placement-oriented training**, the assessment should help you identify:
-
-* **Beginner** → weak in programming logic/basics
-* **Intermediate** → knows syntax + problem solving
-* **Advanced** → can handle functions, OOP, logic, debugging
-
-I’ll design the assessment to cover **Python + Web Basics + Logical Thinking** from your syllabus (mainly first few sections) so you can gauge their level before training.
-
 # Assessment Test (Pre-Training Evaluation)
 
 **Duration:** 60 Minutes
