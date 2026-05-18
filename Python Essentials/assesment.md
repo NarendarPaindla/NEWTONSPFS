@@ -355,3 +355,62 @@ Write a Python function to find the **second largest number in a list**.
 | 31–40 | Good         | Placement preparation possible  |
 | 41–50 | Advanced     | Can move fast into DSA/Projects |
 
+### Solution 1: Using Sorting (Easy Approach)
+
+```python id="twqjlwm"
+def second_largest(numbers):
+    numbers = list(set(numbers))  # Remove duplicates
+    numbers.sort(reverse=True)
+    return numbers[1]
+
+
+nums = [10, 5, 20, 8, 15]
+
+print(second_largest(nums))
+```
+
+### Output:
+
+```text id="jsk5ga"
+15
+```
+
+---
+
+### Solution 2: Without Using `sort()` (Placement-Friendly Logic)
+
+```python id="5zjlwm"
+def second_largest(numbers):
+
+    largest = second = float('-inf')
+
+    for num in numbers:
+
+        if num > largest:
+            second = largest
+            largest = num
+
+        elif num > second and num != largest:
+            second = num
+
+    return second
+
+
+nums = [10, 5, 20, 8, 15]
+
+print(second_largest(nums))
+```
+
+### Output:
+
+```text id="1s2o0m"
+15
+```
+
+**Why this is better for placements?**
+
+* No built-in sorting used
+* Optimized approach (**O(n)** time complexity)
+* Tests logic-building skills in interviews
+
+
