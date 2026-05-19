@@ -242,10 +242,10 @@ Write a Python program to print the following pattern.
 
 ```text id="u3rz4v"
 1
-22
-333
-4444
-55555
+12
+123
+1234
+12345
 ```
 
 ---
