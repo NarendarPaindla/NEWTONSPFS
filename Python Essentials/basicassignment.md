@@ -283,3 +283,140 @@ Write a Python program to find the **sum of digits of a given number**.
 ```text id="m71v6q"
 6
 ```
+
+# Pre-Training Assessment Test – Set 4 (Answer Key)
+
+## Section A: MCQs Answers
+
+| Q.No | Answer                   |
+| ---- | ------------------------ |
+| 1    | **C) print()**           |
+| 2    | **C) int**               |
+| 3    | **B) #**                 |
+| 4    | **C) list**              |
+| 5    | **A) True**              |
+| 6    | **C) input()**           |
+| 7    | **A) 7**                 |
+| 8    | **C) for**               |
+| 9    | **C) PythonProgramming** |
+| 10   | **B) ***                 |
+| 11   | **B) `<h1>`**            |
+| 12   | **C) font-size**         |
+| 13   | **B) let**               |
+| 14   | **A) 1**                 |
+| 15   | **B) if**                |
+| 16   | **B) 1**                 |
+| 17   | **C) def**               |
+| 18   | **C) POST**              |
+| 19   | **C) .py**               |
+| 20   | **B) 5**                 |
+
+---
+
+# Section B: Coding Questions – Sample Solutions
+
+## Question 1: Pattern Problem
+
+```python id="0ecjlwm"
+n = int(input())
+
+for i in range(1, n + 1):
+    print(str(i) * i)
+```
+
+### Example Output (`n = 5`)
+
+```text id="t5jsqq"
+1
+22
+333
+4444
+55555
+```
+
+---
+
+## Question 2: Even or Odd
+
+### Method 1: Using Modulus Operator
+
+```python id="74wv6m"
+num = int(input())
+
+if num % 2 == 0:
+    print("Even")
+else:
+    print("Odd")
+```
+
+### Example Output
+
+**Input:**
+
+```text id="jlwmxx"
+8
+```
+
+**Output:**
+
+```text id="7p1lwp"
+Even
+```
+
+---
+
+## Question 3: Sum of Digits
+
+### Method 1: Using While Loop
+
+```python id="vv57v5"
+num = int(input())
+
+sum_digits = 0
+
+while num > 0:
+    digit = num % 10
+    sum_digits += digit
+    num //= 10
+
+print(sum_digits)
+```
+
+### Example Output
+
+**Input:**
+
+```text id="wn33yv"
+123
+```
+
+**Output:**
+
+```text id="2kr34p"
+6
+```
+
+### Alternative Method (Easy Approach)
+
+```python id="jlwm0r"
+num = input()
+
+sum_digits = 0
+
+for digit in num:
+    sum_digits += int(digit)
+
+print(sum_digits)
+```
+
+---
+
+## Evaluation Criteria
+
+| Score Range | Level                      |
+| ----------- | -------------------------- |
+| **0–15**    | Beginner                   |
+| **16–30**   | Intermediate               |
+| **31–40**   | Good                       |
+| **41–50**   | Advanced / Placement Ready |
+
