@@ -284,7 +284,7 @@ Write a Python program to find the **sum of digits of a given number**.
 6
 ```
 
-# Pre-Training Assessment Test – Set 4 (Answer Key)
+# Pre-Training Assessment Test – 2(Answer Key)
 
 ## Section A: MCQs Answers
 
