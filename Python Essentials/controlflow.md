@@ -1051,3 +1051,366 @@ Ask students:
 Next concept:
 
 ## **Functions** (very important for placements + recursion + hidden Python behavior)
+
+
+# Types of Loops Available in Python & Difference Between Them
+
+In Python, mainly **2 types of loops** are available:
+
+1. **for loop**
+2. **while loop**
+
+---
+
+# 1. for Loop
+
+### Definition
+
+Used when:
+
+### **Number of repetitions is known**
+
+---
+
+## Syntax
+
+```python
+for variable in range(number):
+    statement
+```
+
+---
+
+## Example
+
+Print numbers from 1 to 5
+
+```python
+for i in range(1, 6):
+    print(i)
+```
+
+### Output
+
+```text
+1
+2
+3
+4
+5
+```
+
+---
+
+## Real-Life Example
+
+### Attendance
+
+Teacher knows:
+
+```text
+50 students
+```
+
+Repetition already known.
+
+Use:
+
+### for loop
+
+---
+
+## Common Use Cases
+
+* Printing numbers
+* Multiplication tables
+* Traversing strings
+* Traversing lists
+* Pattern printing
+
+---
+
+# 2. while Loop
+
+### Definition
+
+Used when:
+
+### **Number of repetitions is NOT known**
+
+Loop runs until condition becomes False.
+
+---
+
+## Syntax
+
+```python
+while condition:
+    statement
+```
+
+---
+
+## Example
+
+Print numbers from 1 to 5
+
+```python
+count = 1
+
+while count <= 5:
+    print(count)
+
+    count += 1
+```
+
+### Output
+
+```text
+1
+2
+3
+4
+5
+```
+
+---
+
+## Real-Life Example
+
+### Password Login
+
+You don't know:
+
+### How many attempts user will take.
+
+User may login in:
+
+```text
+1 try
+3 tries
+10 tries
+```
+
+Use:
+
+### while loop
+
+---
+
+## Common Use Cases
+
+* Login systems
+* ATM systems
+* Games
+* Menu-driven programs
+* Retry mechanisms
+
+---
+
+# Difference Between for Loop and while Loop
+
+| Feature               | for loop         | while loop                 |
+| --------------------- | ---------------- | -------------------------- |
+| Repetitions           | Known            | Unknown                    |
+| Condition             | Automatic        | Manual                     |
+| Risk of Infinite Loop | Low              | High                       |
+| Syntax                | Easier           | Slightly harder            |
+| Best For              | Fixed iterations | Condition-based repetition |
+
+---
+
+## Example Comparison
+
+### for loop
+
+```python
+for i in range(5):
+    print(i)
+```
+
+Python automatically changes:
+
+```python
+i
+```
+
+No manual update needed.
+
+---
+
+### while loop
+
+```python
+i = 0
+
+while i < 5:
+    print(i)
+
+    i += 1
+```
+
+You must manually update:
+
+```python
+i += 1
+```
+
+Otherwise:
+
+### Infinite Loop
+
+---
+
+# Hidden Interview Question
+
+### Can every for loop be converted into while loop?
+
+### Answer
+
+✅ Yes
+
+Example:
+
+### for loop
+
+```python
+for i in range(5):
+    print(i)
+```
+
+Equivalent while loop:
+
+```python
+i = 0
+
+while i < 5:
+    print(i)
+
+    i += 1
+```
+
+---
+
+# Hidden Trick Question
+
+### Which loop is faster?
+
+### Answer
+
+Usually:
+
+### `for loop`
+
+Why?
+
+Python internally optimizes it better.
+
+But difference is very small.
+
+---
+
+# Important Memory Trick for Students
+
+### Use:
+
+## **FOR = FIXED**
+
+Known repetitions
+
+---
+
+## **WHILE = WAIT**
+
+Unknown repetitions
+
+Example:
+
+```text
+Wait until password correct
+```
+
+→ while loop
+
+---
+
+# Placement Interview Question
+
+### Q: Which loop is better?
+
+### Answer
+
+Depends on problem.
+
+If repetitions known:
+
+```text
+for loop
+```
+
+If repetitions unknown:
+
+```text
+while loop
+```
+
+No loop is universally better.
+
+---
+
+# Simple Example for Students
+
+### for loop
+
+Print:
+
+```text
+Hello
+```
+
+5 times.
+
+```python
+for i in range(5):
+    print("Hello")
+```
+
+---
+
+### while loop
+
+Print until user enters:
+
+```text
+stop
+```
+
+```python
+text = ""
+
+while text != "stop":
+    text = input("Enter text: ")
+```
+
+---
+
+# Fun Classroom Activity 😄
+
+Ask students:
+
+### Which loop should be used?
+
+1. Print 1–100 → ?
+   ✅ for
+
+2. ATM PIN retry → ?
+   ✅ while
+
+3. Multiplication table → ?
+   ✅ for
+
+4. Login until correct password → ?
+   ✅ while
+
+This helps them remember forever.
+
