@@ -270,3 +270,330 @@
 </body>
 </html>
 ```
+
+# Project: My College Website Layout
+
+### Objective
+
+Build a complete webpage using:
+
+* header
+* nav
+* main
+* section
+* article
+* aside
+* footer
+
+---
+
+# Expected Output Structure
+
+```text
+--------------------------------------------------
+|                    HEADER                        |
+|             GITAM UNIVERSITY                     |
+--------------------------------------------------
+| HOME | ABOUT | COURSES | CONTACT | GALLERY      |
+--------------------------------------------------
+
+|                 MAIN CONTENT                     |
+|--------------------------------------------------|
+|                                                  |
+|  SECTION 1                                       |
+|  About College                                   |
+|                                                  |
+|  ARTICLE                                         |
+|  Latest Placement News                           |
+|                                                  |
+|--------------------------------------------------|
+|                                                  |
+|  SECTION 2                                       |
+|  Popular Courses                                 |
+|                                                  |
+----------------------------------------------------
+
+| ASIDE                                            |
+| Upcoming Events                                  |
+| Placement Drive                                  |
+| Workshop                                         |
+----------------------------------------------------
+
+| FOOTER                                           |
+| Copyright 2026                                   |
+----------------------------------------------------
+```
+
+---
+
+# Complete HTML Project
+
+```html
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>My College Website</title>
+</head>
+
+<body>
+
+    <header>
+        <h1>GITAM UNIVERSITY</h1>
+        <p>Welcome to Our Official Website</p>
+    </header>
+
+    <hr>
+
+    <nav>
+        <a href="#">Home</a> |
+        <a href="#">About</a> |
+        <a href="#">Courses</a> |
+        <a href="#">Gallery</a> |
+        <a href="#">Contact</a>
+    </nav>
+
+    <hr>
+
+    <main>
+
+        <section>
+            <h2>About College</h2>
+
+            <p>
+                GITAM University is one of the leading educational
+                institutions providing quality education.
+            </p>
+        </section>
+
+        <hr>
+
+        <article>
+
+            <h2>Latest Placement News</h2>
+
+            <p>
+                500+ students got placed in top MNC companies
+                during the latest placement drive.
+            </p>
+
+        </article>
+
+        <hr>
+
+        <section>
+
+            <h2>Popular Courses</h2>
+
+            <ul>
+                <li>B.Tech</li>
+                <li>M.Tech</li>
+                <li>MBA</li>
+                <li>BCA</li>
+            </ul>
+
+        </section>
+
+    </main>
+
+    <hr>
+
+    <aside>
+
+        <h2>Upcoming Events</h2>
+
+        <ul>
+            <li>Placement Drive</li>
+            <li>Python Workshop</li>
+            <li>Hackathon</li>
+        </ul>
+
+    </aside>
+
+    <hr>
+
+    <footer>
+
+        <p>
+            Copyright © 2026 GITAM University
+        </p>
+
+    </footer>
+
+</body>
+
+</html>
+```
+
+---
+
+# Real World Project
+
+### Personal Portfolio Layout
+
+This project covers all important semantic tags.
+
+```html
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Portfolio</title>
+</head>
+
+<body>
+
+    <header>
+        <h1>Paindla Narendar Reddy</h1>
+        <p>Full Stack Developer | Trainer</p>
+    </header>
+
+    <hr>
+
+    <nav>
+        <a href="#">About</a>
+        <a href="#">Skills</a>
+        <a href="#">Projects</a>
+        <a href="#">Contact</a>
+    </nav>
+
+    <hr>
+
+    <main>
+
+        <section>
+
+            <h2>About Me</h2>
+
+            <p>
+                Passionate Full Stack Developer and Trainer.
+            </p>
+
+        </section>
+
+        <section>
+
+            <h2>Skills</h2>
+
+            <ul>
+                <li>Java</li>
+                <li>Spring Boot</li>
+                <li>MongoDB</li>
+                <li>ReactJS</li>
+            </ul>
+
+        </section>
+
+        <article>
+
+            <h2>Project Highlight</h2>
+
+            <p>
+                Developed VillageBasket Food Delivery Application.
+            </p>
+
+        </article>
+
+    </main>
+
+    <aside>
+
+        <h3>Quick Links</h3>
+
+        <ul>
+            <li>GitHub</li>
+            <li>LinkedIn</li>
+            <li>Resume</li>
+        </ul>
+
+    </aside>
+
+    <footer>
+
+        <p>
+            Email : narendar@example.com
+        </p>
+
+    </footer>
+
+</body>
+
+</html>
+```
+
+---
+
+# Best Classroom Activity
+
+### Task: Create a News Website
+
+Requirements:
+
+1. Use `<header>` for website title.
+2. Use `<nav>` for categories.
+3. Use `<main>` for main content.
+4. Use `<section>` for Sports News.
+5. Use `<section>` for Technology News.
+6. Use `<article>` for individual news articles.
+7. Use `<aside>` for advertisements.
+8. Use `<footer>` for copyright.
+
+---
+
+# Interview Questions
+
+### What are Semantic Tags?
+
+Semantic tags describe the meaning or purpose of the content.
+
+Example:
+
+```html
+<header>
+<footer>
+<nav>
+<section>
+<article>
+<aside>
+<main>
+```
+
+---
+
+### Why were Semantic Tags introduced?
+
+Before HTML5:
+
+```html
+<div id="header"></div>
+
+<div id="footer"></div>
+```
+
+Difficult to understand.
+
+After HTML5:
+
+```html
+<header></header>
+
+<footer></footer>
+```
+
+Easy to understand.
+
+---
+
+### Difference Between Semantic and Non-Semantic Tags
+
+| Semantic | Non-Semantic |
+| -------- | ------------ |
+| header   | div          |
+| footer   | span         |
+| nav      | div          |
+| section  | div          |
+| article  | div          |
+
+---
+
+
