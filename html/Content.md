@@ -1070,4 +1070,293 @@ Used to embed another webpage inside the current webpage.
 <iframe src="youtube-embed-link"></iframe>
 ```
 
+If you want to teach **old HTML Frames** (sidebar, topbar, content area), students usually enjoy creating a layout like this:
+
+```text
+ --------------------------------------------------
+|                    TOP BAR                       |
+ --------------------------------------------------
+|          |                                       |
+|          |                                       |
+| SIDEBAR  |            CONTENT AREA               |
+|          |                                       |
+|          |                                       |
+ --------------------------------------------------
+|                    FOOTER                        |
+ --------------------------------------------------
+```
+
+# Method 1: Using Old HTML Frameset (HTML4)
+
+> Note: `<frameset>` and `<frame>` are obsolete in HTML5, but many trainers still teach them for understanding legacy websites.
+
+## Project: Top Bar + Sidebar + Content
+
+### index.html
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Frames Example</title>
+</head>
+
+<frameset rows="20%,80%">
+
+    <frame src="header.html">
+
+    <frameset cols="25%,75%">
+
+        <frame src="sidebar.html">
+
+        <frame src="content.html">
+
+    </frameset>
+
+</frameset>
+
+</html>
+```
+
+---
+
+### header.html
+
+```html
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1 align="center">
+    Student Portal
+</h1>
+
+</body>
+</html>
+```
+
+---
+
+### sidebar.html
+
+```html
+<!DOCTYPE html>
+<html>
+<body>
+
+<h3>Menu</h3>
+
+<ul>
+    <li>Home</li>
+    <li>Courses</li>
+    <li>Students</li>
+    <li>Contact</li>
+</ul>
+
+</body>
+</html>
+```
+
+---
+
+### content.html
+
+```html
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Welcome</h2>
+
+<p>
+This is the content area.
+</p>
+
+</body>
+</html>
+```
+
+---
+
+# Method 2: Modern HTML5 Template (Recommended)
+
+Instead of frames, use semantic tags.
+
+```text
+ --------------------------------------------------
+|                  HEADER                          |
+ --------------------------------------------------
+| HOME | ABOUT | COURSES | CONTACT                |
+ --------------------------------------------------
+|          |                                       |
+| SIDEBAR  |             MAIN CONTENT              |
+|          |                                       |
+ --------------------------------------------------
+|                  FOOTER                          |
+ --------------------------------------------------
+```
+
+### Complete HTML
+
+```html
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Dashboard Layout</title>
+</head>
+
+<body>
+
+<header>
+    <h1>Student Portal</h1>
+</header>
+
+<hr>
+
+<nav>
+    Home |
+    About |
+    Courses |
+    Contact
+</nav>
+
+<hr>
+
+<table border="1" width="100%">
+
+<tr>
+
+<td width="25%">
+
+<h3>Sidebar</h3>
+
+<ul>
+    <li>Dashboard</li>
+    <li>Students</li>
+    <li>Courses</li>
+    <li>Settings</li>
+</ul>
+
+</td>
+
+<td>
+
+<h2>Main Content</h2>
+
+<p>
+Welcome to Student Management System.
+</p>
+
+</td>
+
+</tr>
+
+</table>
+
+<hr>
+
+<footer>
+
+Copyright © 2026
+
+</footer>
+
+</body>
+
+</html>
+```
+
+---
+
+# Hands-On Assignment 1
+
+Create a **College Website Layout**
+
+```text
+HEADER
+
+NAVIGATION
+
+SIDEBAR      CONTENT
+
+FOOTER
+```
+
+Requirements:
+
+* Header → College Name
+* Nav → Home, About, Courses, Contact
+* Sidebar → Departments
+* Content → College Information
+* Footer → Copyright
+
+---
+
+# Hands-On Assignment 2
+
+Create an **Admin Dashboard**
+
+```text
+HEADER
+
+SIDEBAR | DASHBOARD
+
+FOOTER
+```
+
+Sidebar Menu:
+
+* Dashboard
+* Students
+* Faculty
+* Courses
+* Reports
+
+Content Area:
+
+* Welcome Admin
+* Total Students
+* Total Faculty
+
+---
+
+# Frames Tags (Legacy HTML)
+
+| Tag      | Purpose                         |
+| -------- | ------------------------------- |
+| frameset | Creates frame layout            |
+| frame    | Defines frame                   |
+| noframes | Content when frames unsupported |
+
+### Example
+
+```html
+<frameset cols="30%,70%">
+
+<frame src="left.html">
+
+<frame src="right.html">
+
+</frameset>
+```
+
+### Nested Frames
+
+```html
+<frameset rows="20%,80%">
+
+<frame src="top.html">
+
+<frameset cols="30%,70%">
+
+<frame src="left.html">
+
+<frame src="content.html">
+
+</frameset>
+
+</frameset>
+```
+
 
