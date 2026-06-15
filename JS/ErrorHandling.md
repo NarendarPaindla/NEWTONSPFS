@@ -828,4 +828,3 @@ catch(error){
 }
 ```
 
-The next major topic should be **async/await from scratch**, because that's where modern JavaScript API development becomes much easier than raw Promises.
