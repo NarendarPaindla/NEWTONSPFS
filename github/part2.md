@@ -1,4 +1,4 @@
-# Git & GitHub – Part 2 (Deep Dive)
+# Git & GitHub – Part 2 
 
 Now that you know `init`, `add`, `commit`, branches, merge, and GitHub basics, let's move to concepts commonly used in companies.
 
