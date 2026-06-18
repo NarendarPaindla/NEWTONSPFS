@@ -1,0 +1,887 @@
+# Query Parameters in FastAPI
+
+Till now we learned:
+
+```text
+Static Routes
+      ↓
+Path Parameters
+```
+
+Example:
+
+```http
+/students/101
+```
+
+Here:
+
+```text
+101
+```
+
+identifies a specific student.
+
+But what if we want:
+
+```text
+Only CSE Students
+Students Above Age 20
+Students Sorted By Name
+Page 2 Results
+```
+
+Should we create routes like:
+
+```http
+/students/cse
+/students/age20
+/students/page2
+```
+
+❌ Bad Design
+
+Instead we use:
+
+# Query Parameters
+
+---
+
+# What are Query Parameters?
+
+Query Parameters are values passed after a `?` in the URL.
+
+Example:
+
+```http
+/students?department=CSE
+```
+
+Here:
+
+```text
+department=CSE
+```
+
+is a Query Parameter.
+
+---
+
+# URL Structure
+
+```text
+/students
+    ?
+department=CSE
+```
+
+Think:
+
+```text
+Main Resource
+      +
+Additional Filters
+```
+
+---
+
+# Real Life Example
+
+Imagine Amazon.
+
+You search:
+
+```text
+Laptop
+```
+
+Then apply filters:
+
+```text
+Brand = Dell
+Price < 50000
+Rating > 4
+```
+
+URL becomes:
+
+```http
+/products?brand=Dell&price=50000
+```
+
+These are Query Parameters.
+
+---
+
+# First Query Parameter Example
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/students")
+def get_students(department: str):
+    return {
+        "department": department
+    }
+```
+
+---
+
+# Request
+
+```http
+GET /students?department=CSE
+```
+
+Response:
+
+```json
+{
+  "department":"CSE"
+}
+```
+
+---
+
+# How FastAPI Knows?
+
+FastAPI sees:
+
+```python
+department: str
+```
+
+but does not find it in:
+
+```python
+/students
+```
+
+So it automatically treats it as a Query Parameter.
+
+Magic ✨
+
+---
+
+# Visual Flow
+
+```text
+Client
+   |
+GET /students?department=CSE
+   |
+   V
+department = CSE
+   |
+   V
+Function Executes
+   |
+   V
+JSON Response
+```
+
+---
+
+# Multiple Query Parameters
+
+Example:
+
+```python
+@app.get("/students")
+def get_students(
+    department: str,
+    year: int
+):
+    return {
+        "department": department,
+        "year": year
+    }
+```
+
+---
+
+Request:
+
+```http
+/students?department=CSE&year=3
+```
+
+Response:
+
+```json
+{
+  "department":"CSE",
+  "year":3
+}
+```
+
+---
+
+# Query Parameters are Great for Filtering
+
+Student System
+
+Request:
+
+```http
+/students?department=CSE
+```
+
+---
+
+Faculty System
+
+```http
+/faculty?designation=Professor
+```
+
+---
+
+Hospital System
+
+```http
+/patients?gender=male
+```
+
+---
+
+E-Commerce
+
+```http
+/products?brand=Apple
+```
+
+Very common.
+
+---
+
+# Optional Query Parameters
+
+Normally:
+
+```python
+@app.get("/students")
+def get_students(department: str):
+```
+
+is required.
+
+If user doesn't provide:
+
+```http
+/students
+```
+
+FastAPI returns:
+
+```http
+422 Unprocessable Entity
+```
+
+---
+
+# Making it Optional
+
+```python
+@app.get("/students")
+def get_students(department: str = None):
+    return {
+        "department": department
+    }
+```
+
+---
+
+Request:
+
+```http
+/students
+```
+
+Response:
+
+```json
+{
+  "department": null
+}
+```
+
+---
+
+Request:
+
+```http
+/students?department=CSE
+```
+
+Response:
+
+```json
+{
+  "department":"CSE"
+}
+```
+
+---
+
+# Default Values
+
+```python
+@app.get("/students")
+def get_students(year: int = 1):
+    return {
+        "year": year
+    }
+```
+
+---
+
+Request:
+
+```http
+/students
+```
+
+Response:
+
+```json
+{
+  "year":1
+}
+```
+
+---
+
+Request:
+
+```http
+/students?year=3
+```
+
+Response:
+
+```json
+{
+  "year":3
+}
+```
+
+---
+
+# Multiple Optional Parameters
+
+```python
+@app.get("/students")
+def get_students(
+    department: str = None,
+    year: int = None
+):
+    return {
+        "department": department,
+        "year": year
+    }
+```
+
+---
+
+Requests:
+
+```http
+/students
+```
+
+```http
+/students?department=CSE
+```
+
+```http
+/students?year=4
+```
+
+```http
+/students?department=CSE&year=4
+```
+
+All work.
+
+---
+
+# Real Industry Example: Product Search
+
+```python
+@app.get("/products")
+def products(
+    category: str = None,
+    brand: str = None
+):
+    return {
+        "category": category,
+        "brand": brand
+    }
+```
+
+---
+
+Request:
+
+```http
+/products?category=Laptop&brand=Dell
+```
+
+Response:
+
+```json
+{
+  "category":"Laptop",
+  "brand":"Dell"
+}
+```
+
+---
+
+# Pagination (Very Important)
+
+Every company uses pagination.
+
+Imagine:
+
+```text
+10,00,000 Students
+```
+
+Should API return everything?
+
+❌ No
+
+---
+
+Instead:
+
+```http
+/students?page=1&limit=10
+```
+
+---
+
+FastAPI
+
+```python
+@app.get("/students")
+def students(
+    page: int = 1,
+    limit: int = 10
+):
+    return {
+        "page": page,
+        "limit": limit
+    }
+```
+
+---
+
+Request
+
+```http
+/students?page=2&limit=20
+```
+
+Response
+
+```json
+{
+  "page":2,
+  "limit":20
+}
+```
+
+---
+
+# Searching
+
+Example:
+
+```python
+@app.get("/students")
+def students(search: str = None):
+    return {
+        "search": search
+    }
+```
+
+---
+
+Request:
+
+```http
+/students?search=ravi
+```
+
+Response:
+
+```json
+{
+  "search":"ravi"
+}
+```
+
+---
+
+# Sorting
+
+Example:
+
+```python
+@app.get("/students")
+def students(sort_by: str = "name"):
+    return {
+        "sort_by": sort_by
+    }
+```
+
+---
+
+Request:
+
+```http
+/students?sort_by=age
+```
+
+Response:
+
+```json
+{
+  "sort_by":"age"
+}
+```
+
+---
+
+# Combining Everything
+
+Real-world API:
+
+```python
+@app.get("/students")
+def students(
+    department: str = None,
+    year: int = None,
+    page: int = 1,
+    limit: int = 10
+):
+    return {
+        "department": department,
+        "year": year,
+        "page": page,
+        "limit": limit
+    }
+```
+
+---
+
+Request:
+
+```http
+/students?
+department=CSE&
+year=3&
+page=2&
+limit=20
+```
+
+Response:
+
+```json
+{
+  "department":"CSE",
+  "year":3,
+  "page":2,
+  "limit":20
+}
+```
+
+---
+
+# Path Parameter vs Query Parameter
+
+This is an interview favorite.
+
+---
+
+## Path Parameter
+
+Identifies a specific resource.
+
+Example:
+
+```http
+/students/101
+```
+
+Question:
+
+```text
+Which student?
+```
+
+Answer:
+
+```text
+Student 101
+```
+
+---
+
+## Query Parameter
+
+Filters or modifies results.
+
+Example:
+
+```http
+/students?department=CSE
+```
+
+Question:
+
+```text
+Which students?
+```
+
+Answer:
+
+```text
+Only CSE students
+```
+
+---
+
+# Quick Comparison
+
+| Path Parameter       | Query Parameter            |
+| -------------------- | -------------------------- |
+| Required Resource ID | Optional Filters           |
+| `/students/101`      | `/students?department=CSE` |
+| Identifies Resource  | Filters Resource           |
+| Usually Required     | Often Optional             |
+
+---
+
+# Combined Example
+
+```python
+@app.get("/students/{student_id}")
+def get_student(
+    student_id: int,
+    details: bool = False
+):
+    return {
+        "student_id": student_id,
+        "details": details
+    }
+```
+
+---
+
+Request:
+
+```http
+/students/101?details=true
+```
+
+Response:
+
+```json
+{
+  "student_id":101,
+  "details":true
+}
+```
+
+---
+
+# Swagger Support
+
+Open:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+Swagger automatically generates:
+
+```text
+department
+year
+page
+limit
+```
+
+input boxes.
+
+You can test directly.
+
+---
+
+# Common Beginner Mistakes
+
+### Wrong
+
+```http
+/students/department=CSE
+```
+
+Trying to filter using path.
+
+---
+
+Correct:
+
+```http
+/students?department=CSE
+```
+
+---
+
+### Wrong
+
+```python
+def students(page="one")
+```
+
+Expected number but using string.
+
+---
+
+Correct:
+
+```python
+def students(page: int = 1)
+```
+
+---
+
+# Real Industry Use Cases
+
+### Search
+
+```http
+/students?search=ravi
+```
+
+---
+
+### Pagination
+
+```http
+/students?page=2&limit=20
+```
+
+---
+
+### Sorting
+
+```http
+/students?sort_by=name
+```
+
+---
+
+### Filtering
+
+```http
+/students?department=CSE
+```
+
+---
+
+### Multiple Filters
+
+```http
+/products?
+category=Laptop&
+brand=Dell&
+price=50000
+```
+
+Very common in production APIs.
+
+---
+
+# Interview Questions
+
+### What is a Query Parameter?
+
+A value passed after `?` in a URL used for filtering, searching, sorting, or pagination.
+
+---
+
+### Example?
+
+```http
+/students?department=CSE
+```
+
+---
+
+### Difference between Path and Query Parameters?
+
+Path parameters identify a resource.
+
+Query parameters filter or modify results.
+
+---
+
+### Can Query Parameters be optional?
+
+Yes.
+
+Using default values:
+
+```python
+department: str = None
+```
+
+---
+
+### What are common uses?
+
+```text
+Filtering
+Searching
+Sorting
+Pagination
+```
+
+---
+
+# Golden Rule
+
+Ask yourself:
+
+### Am I identifying a specific resource?
+
+Use:
+
+```http
+/students/101
+```
+
+(Path Parameter)
+
+---
+
+### Am I filtering or modifying results?
+
+Use:
+
+```http
+/students?department=CSE
+```
+
+(Query Parameter)
+
+This simple rule helps you design professional REST APIs used in real-world FastAPI applications.
+
+
