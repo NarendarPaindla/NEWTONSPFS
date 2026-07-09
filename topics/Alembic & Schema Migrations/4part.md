@@ -1,591 +1,853 @@
-Introduction
-The MongoDB Aggregation Framework is a powerful data processing pipeline that transforms and analyzes documents to produce computed results. While simple queries with find() retrieve documents matching filters, aggregation enables complex operations like grouping, calculating statistics, reshaping documents, and performing multi-stage transformations. Think of aggregation as a production line where documents flow through multiple stages, each stage transforming the data before passing it to the next. Whether you're generating reports, calculating analytics, transforming data structures, or performing complex filtering and sorting, the aggregation framework provides the tools needed for sophisticated data processing. Understanding the pipeline concept, mastering fundamental stages like $match, $project, $sort, $limit, and $skip, and learning to combine stages effectively enables you to extract meaningful insights from your MongoDB data beyond what simple queries can accomplish.
-
-Introduction to Aggregation Framework
-The Aggregation Framework processes data through a pipeline of stages, each performing specific operations on documents.
-
-Basic aggregation syntax:
-
-db.collection.aggregate([
-  { stage1 },
-  { stage2 },
-  { stage3 }
-])
-Aggregation takes an array of stages. Documents flow through stages sequentially.
-
-Simple aggregation example:
-
-db.products.aggregate([
-  { $match: { category: "Electronics" } },
-  { $sort: { price: -1 } },
-  { $limit: 5 }
-])
-This finds electronics, sorts by price descending, and returns the top 5.
-
-Aggregation vs find():
-
-// Using find()
-db.products.find({ category: "Electronics" })
-  .sort({ price: -1 })
-  .limit(5)
-
-// Using aggregation (equivalent)
-db.products.aggregate([
-  { $match: { category: "Electronics" } },
-  { $sort: { price: -1 } },
-  { $limit: 5 }
-])
-For simple operations, find() suffices. Aggregation shines with complex transformations.
-
-When to use aggregation:
-
-Use aggregation for:
-
-Grouping and calculating statistics
-Complex data transformations
-Multi-stage processing
-Computed fields
-Joining collections ($lookup)
-Use find() for:
-
-Simple filtering
-Straightforward queries
-Basic sorting and limiting
-Understanding aggregation output:
-
-const result = db.products.aggregate([
-  { $match: { price: { $lt: 100 } } }
-])
-
-// Returns cursor (like find)
-result.forEach(doc => print(doc.name))
-
-// Or convert to array
-const docs = result.toArray()
-Real-world aggregation use cases:
-
-// Calculate total sales by category
-db.orders.aggregate([
-  { $group: { 
-    _id: "$category",
-    totalSales: { $sum: "$amount" }
-  }}
-])
-
-// Generate monthly reports
-db.transactions.aggregate([
-  { $group: {
-    _id: { $month: "$date" },
-    total: { $sum: "$amount" }
-  }}
-])
-Aggregation Pipeline Concept
-The pipeline concept is central to understanding how aggregation works. Documents flow through stages, with each stage transforming the data.
-
-Pipeline flow visualization:
-
-  Input: All documents in collection
-    ↓
- Stage 1: $match (filter)
-    ↓ 
- Stage 2: $project (reshape)
-    ↓ 
- Stage 3: $sort (order)
-    ↓ 
- Stage 4: $limit (reduce)
-    ↓
- Output: Final result set 
-Pipeline stages process sequentially:
-
-db.orders.aggregate([
-  { $match: { status: "completed" } },     // Stage 1: Filter
-  { $group: {                               // Stage 2: Group
-    _id: "$customerId",
-    total: { $sum: "$amount" }
-  }},
-  { $sort: { total: -1 } },                // Stage 3: Sort
-  { $limit: 10 }                           // Stage 4: Limit
-])
-Understanding stage order importance:
-
-// Efficient: Filter early
-db.products.aggregate([
-  { $match: { category: "Electronics" } },  // Reduces documents
-  { $sort: { price: -1 } },                  // Sorts fewer docs
-  { $limit: 5 }
-])
-
-// Inefficient: Filter late
-db.products.aggregate([
-  { $sort: { price: -1 } },                  // Sorts all docs
-  { $limit: 100 },
-  { $match: { category: "Electronics" } }    // Then filters
-])
-Early filtering reduces processing in subsequent stages.
-
-Document transformation through pipeline:
-
-// Input document:
-{ name: "Laptop", price: 999, category: "Electronics" }
-
-// After $match: { category: "Electronics" }
-{ name: "Laptop", price: 999, category: "Electronics" }
-
-// After $project: { name: 1, price: 1 }
-{ name: "Laptop", price: 999 }
-
-// After $addFields: { discounted: "$price" * 0.9 }
-{ name: "Laptop", price: 999, discounted: 899.1 }
-Pipeline stages can be repeated:
-
-db.orders.aggregate([
-  { $match: { status: "completed" } },
-  { $match: { amount: { $gt: 100 } } },    // Second $match
-  { $project: { customer: 1, amount: 1 } },
-  { $project: { customer: 1 } }            // Second $project
-])
-Multiple stages of the same type are allowed.
-
-$match Stage - Filtering Documents
-The $match stage filters documents based on specified conditions, similar to find() queries.
-
-Basic $match syntax:
-
-db.products.aggregate([
-  { $match: { category: "Electronics" } }
-])
-This filters to only electronics products.
-
-$match with comparison operators:
-
-db.products.aggregate([
-  { $match: { 
-    price: { $gte: 100, $lte: 500 }
-  }}
-])
-Finds products priced between 100 and 500.
-
-$match with logical operators:
-
-db.products.aggregate([
-  { $match: {
-    $or: [
-      { category: "Electronics" },
-      { category: "Computers" }
-    ],
-    price: { $lt: 1000 }
-  }}
-])
-Combines multiple conditions using logical operators.
-
-$match with array queries:
-
-db.products.aggregate([
-  { $match: { 
-    tags: { $all: ["wireless", "portable"] }
-  }}
-])
-Filters based on array contents.
-
-$match with nested fields:
-
-db.users.aggregate([
-  { $match: { 
-    "address.city": "New York",
-    "address.state": "NY"
-  }}
-])
-Uses dot notation for nested field matching.
-
-Multiple $match stages:
-
-db.orders.aggregate([
-  { $match: { status: "completed" } },
-  { $match: { total: { $gte: 100 } } },
-  { $match: { "customer.country": "USA" } }
-])
-Multiple $match stages filter progressively. Place most selective filters first.
-
-$match after computed fields:
-
-db.products.aggregate([
-  { $addFields: { 
-    discountedPrice: { $multiply: ["$price", 0.9] }
-  }},
-  { $match: { 
-    discountedPrice: { $lt: 500 }
-  }}
-])
-You can match on fields computed in earlier stages.
-
-$match performance considerations:
-
-// Good: $match early (uses indexes)
-db.products.aggregate([
-  { $match: { category: "Electronics" } },
-  { $project: { name: 1, price: 1 } }
-])
-
-// Less efficient: $match late (processes all docs first)
-db.products.aggregate([
-  { $project: { name: 1, price: 1 } },
-  { $match: { category: "Electronics" } }
-])
-Place $match as early as possible to leverage indexes and reduce documents.
-
-$project Stage - Shaping Output
-The $project stage reshapes documents by including, excluding, or computing fields.
-
-Including specific fields:
-
-db.users.aggregate([
-  { $project: { 
-    name: 1,
-    email: 1
-  }}
-])
-Returns only name and email fields (plus _id by default).
-
-Excluding _id field:
-
-db.users.aggregate([
-  { $project: { 
-    name: 1,
-    email: 1,
-    _id: 0
-  }}
-])
-Set _id: 0 to exclude it from results.
-
-Excluding specific fields:
-
-db.users.aggregate([
-  { $project: { 
-    password: 0,
-    secretKey: 0
-  }}
-])
-Returns all fields except password and secretKey.
-
-Renaming fields:
-
-db.products.aggregate([
-  { $project: { 
-    productName: "$name",
-    cost: "$price"
-  }}
-])
-Creates new field names from existing fields using $fieldName syntax.
-
-Computing new fields:
-
-db.products.aggregate([
-  { $project: {
-    name: 1,
-    price: 1,
-    discountedPrice: { $multiply: ["$price", 0.9] }
-  }}
-])
-Calculates discounted price as 90% of original price.
-
-String operations in $project:
-
-db.users.aggregate([
-  { $project: {
-    fullName: { 
-      $concat: ["$firstName", " ", "$lastName"]
-    },
-    emailLower: { $toLower: "$email" }
-  }}
-])
-Concatenates strings and converts to lowercase.
-
-Mathematical operations:
-
-db.orders.aggregate([
-  { $project: {
-    orderId: 1,
-    subtotal: 1,
-    tax: { $multiply: ["$subtotal", 0.08] },
-    total: { 
-      $add: ["$subtotal", { $multiply: ["$subtotal", 0.08] }]
-    }
-  }}
-])
-Performs calculations to compute tax and total.
-
-Conditional expressions:
-
-db.products.aggregate([
-  { $project: {
-    name: 1,
-    price: 1,
-    category: {
-      $cond: {
-        if: { $gte: ["$price", 1000] },
-        then: "Premium",
-        else: "Standard"
-      }
-    }
-  }}
-])
-Uses conditional logic to assign categories based on price.
-
-Nested field projection:
-
-db.users.aggregate([
-  { $project: {
-    name: 1,
-    city: "$address.city",
-    zipCode: "$address.zipCode"
-  }}
-])
-Extracts nested fields to top level.
-
-Array operations in $project:
-
-db.products.aggregate([
-  { $project: {
-    name: 1,
-    tagCount: { $size: "$tags" },
-    firstTag: { $arrayElemAt: ["$tags", 0] }
-  }}
-])
-Calculates array size and extracts specific elements.
-
-$sort Stage - Ordering Results
-The $sort stage orders documents by specified field(s) in ascending or descending order.
-
-Basic $sort syntax:
-
-db.products.aggregate([
-  { $sort: { price: 1 } }
-])
-Sorts by price ascending (1 for ascending, -1 for descending).
-
-Descending sort:
-
-db.products.aggregate([
-  { $sort: { price: -1 } }
-])
-Sorts by price descending (highest to lowest).
-
-Sorting by multiple fields:
-
-db.products.aggregate([
-  { $sort: { 
-    category: 1,
-    price: -1
-  }}
-])
-Sorts by category ascending, then by price descending within each category.
-
-Sorting with $match:
-
-db.products.aggregate([
-  { $match: { inStock: true } },
-  { $sort: { rating: -1 } }
-])
-Filters to in-stock products, then sorts by rating.
-
-Sorting computed fields:
-
-db.orders.aggregate([
-  { $addFields: {
-    total: { $add: ["$subtotal", "$tax", "$shipping"] }
-  }},
-  { $sort: { total: -1 } }
-])
-Computes total and sorts by it.
-
-Sort order with multiple stages:
-
-db.products.aggregate([
-  { $match: { category: "Electronics" } },
-  { $sort: { price: -1 } },
-  { $limit: 10 },
-  { $sort: { name: 1 } }     // Re-sort top 10 by name
-])
-Documents can be sorted multiple times through the pipeline.
-
-Sorting nested fields:
-
-db.users.aggregate([
-  { $sort: { "address.city": 1 } }
-])
-Uses dot notation to sort by nested fields.
-
-Performance considerations:
-
-// Efficient: Sort on indexed field
-db.products.createIndex({ price: 1 })
-db.products.aggregate([
-  { $sort: { price: 1 } }
-])
-
-// Less efficient: Sort on non-indexed field
-db.products.aggregate([
-  { $sort: { rating: 1 } }  // No index on rating
-])
-Sorting indexed fields is faster. Consider creating indexes for frequently sorted fields.
-
-Memory limits with sorting:
-
-// Large sort (may hit 100MB memory limit)
-db.largeCollection.aggregate([
-  { $sort: { date: -1 } }
-])
-
-// Use allowDiskUse for large sorts
-db.largeCollection.aggregate(
-  [{ $sort: { date: -1 } }],
-  { allowDiskUse: true }
+# Module 15 – Part 4
+
+# First Migration (Autogenerate) – End-to-End
+
+Today is where students usually have the biggest **"Aha!"** moment.
+
+For the first time, we'll see how **Alembic converts our SQLAlchemy models into SQL** automatically.
+
+---
+
+# Recap
+
+So far we have:
+
+```text
+SmartCart/
+
+│── app/
+│      database.py
+│      models/
+│          user.py
+│          product.py
+│          order.py
+│
+│── alembic/
+│      env.py
+│      versions/
+│
+│── alembic.ini
+```
+
+We have already:
+
+* ✅ Installed Alembic
+* ✅ Initialized Alembic
+* ✅ Configured `env.py`
+* ✅ Connected `Base.metadata`
+
+Now Alembic knows our models.
+
+---
+
+# Current User Model
+
+Suppose we have only one model.
+
+```python
+# app/models/user.py
+
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from sqlalchemy import Integer,String
+
+from app.database import Base
+
+class User(Base):
+
+    __tablename__="users"
+
+    id:Mapped[int]=mapped_column(Integer,primary_key=True)
+
+    name:Mapped[str]=mapped_column(String(100))
+
+    email:Mapped[str]=mapped_column(String(150))
+```
+
+Notice something.
+
+We have written only Python.
+
+No SQL.
+
+No CREATE TABLE.
+
+Nothing.
+
+---
+
+# Student Question
+
+> Sir, how does Alembic know what SQL to write?
+
+Excellent question.
+
+Alembic doesn't read MySQL directly.
+
+It first reads
+
+```text
+Base.metadata
+```
+
+Inside metadata it finds
+
+```text
+users
+
+↓
+
+id
+
+↓
+
+name
+
+↓
+
+email
+```
+
+Then it compares
+
+```text
+Database
+
+VS
+
+Metadata
+```
+
+---
+
+# Let's Check the Database
+
+Suppose SmartCart database is completely empty.
+
+```text
+smartcart
+
+(No Tables)
+```
+
+Our model
+
+```text
+users
+
+id
+
+name
+
+email
+```
+
+Difference
+
+```text
+Database
+
+↓
+
+Nothing
+
+Model
+
+↓
+
+users table
+```
+
+Alembic thinks
+
+> I need to create this table.
+
+---
+
+# Step 1
+
+Generate Migration
+
+Run
+
+```bash
+alembic revision --autogenerate -m "Create users table"
+```
+
+Students usually panic seeing this command.
+
+Let's understand every word.
+
+---
+
+## revision
+
+Means
+
+```text
+Create a New Database Version
+```
+
+Exactly like
+
+```text
+Git Commit
+```
+
+---
+
+## --autogenerate
+
+This is the most powerful option.
+
+Without it
+
+Alembic creates an empty migration.
+
+With it
+
+Alembic compares
+
+```text
+Database
+
+↓
+
+Current
+
+Model
+
+↓
+
+Expected
+```
+
+Then generates SQL automatically.
+
+---
+
+## -m
+
+Means
+
+```text
+Message
+```
+
+Exactly like
+
+```bash
+git commit -m "Initial Commit"
+```
+
+Here
+
+```bash
+-m "Create users table"
+```
+
+is only for humans.
+
+Later you'll understand the purpose immediately.
+
+---
+
+# What Happens Internally?
+
+Suppose
+
+Database
+
+```text
+(No Tables)
+```
+
+Model
+
+```text
+users
+```
+
+Alembic performs
+
+```text
+Step 1
+
+Connect to Database
+
+↓
+
+Step 2
+
+Read Current Tables
+
+↓
+
+Step 3
+
+Read Base.metadata
+
+↓
+
+Step 4
+
+Compare
+
+↓
+
+Step 5
+
+Generate Python Migration File
+```
+
+Notice
+
+It does **NOT**
+
+modify database.
+
+Students misunderstand this.
+
+---
+
+# Very Important
+
+After running
+
+```bash
+alembic revision --autogenerate
+```
+
+Database is still
+
+```text
+Empty
+```
+
+Only a migration file is created.
+
+---
+
+# Look Inside versions/
+
+Previously
+
+```text
+versions/
+
+(empty)
+```
+
+Now
+
+```text
+versions/
+
+4f98ab27_create_users_table.py
+```
+
+Question
+
+Where did this strange filename come from?
+
+---
+
+# Revision ID
+
+Alembic automatically generates
+
+```text
+4f98ab27
+```
+
+This is called
+
+```text
+Revision ID
+```
+
+Every migration has a unique ID.
+
+Like Git Commit Hash.
+
+Example
+
+```text
+001
+
+↓
+
+002
+
+↓
+
+003
+```
+
+Alembic instead uses
+
+```text
+4f98ab27
+
+↓
+
+8fd1ac90
+
+↓
+
+91bd72ef
+```
+
+to avoid conflicts.
+
+---
+
+# Open the Migration File
+
+You'll see something like
+
+```python
+"""Create users table"""
+
+from alembic import op
+import sqlalchemy as sa
+
+revision = "4f98ab27"
+
+down_revision = None
+
+branch_labels = None
+
+depends_on = None
+```
+
+Students ask
+
+Why so much code?
+
+Let's understand.
+
+---
+
+# revision
+
+```python
+revision="4f98ab27"
+```
+
+Means
+
+```text
+Current Version
+```
+
+---
+
+# down_revision
+
+Since this is the first migration
+
+```python
+down_revision=None
+```
+
+Because
+
+Nothing exists before this.
+
+Later
+
+Second migration
+
+```python
+revision="7bd29"
+
+down_revision="4f98ab27"
+```
+
+Third migration
+
+```python
+revision="af732"
+
+down_revision="7bd29"
+```
+
+Like a chain.
+
+```text
+V1
+
+↓
+
+V2
+
+↓
+
+V3
+
+↓
+
+V4
+```
+
+---
+
+# Most Important Part
+
+Now scroll further.
+
+You'll see
+
+```python
+def upgrade():
+
+    pass
+```
+
+or
+
+```python
+def upgrade():
+
+    op.create_table(
+        ...
+    )
+```
+
+Depending on your model.
+
+---
+
+# What is upgrade()?
+
+Think
+
+Client wants
+
+```text
+New Feature
+```
+
+Database must move
+
+Old Version
+
+↓
+
+New Version
+
+Everything inside
+
+```python
+upgrade()
+```
+
+moves database
+
+Forward.
+
+---
+
+Example
+
+```python
+def upgrade():
+
+    op.create_table(...)
+```
+
+Means
+
+```text
+Database
+
+↓
+
+Create users table
+```
+
+---
+
+# downgrade()
+
+Below it
+
+```python
+def downgrade():
+```
+
+Students usually ignore this.
+
+Actually
+
+This is even more important.
+
+Imagine
+
+Yesterday
+
+You deployed
+
+```text
+Version 5
+```
+
+Suddenly
+
+Production crashes.
+
+Company says
+
+Rollback immediately.
+
+Who saves us?
+
+Answer
+
+```python
+downgrade()
+```
+
+---
+
+Example
+
+```python
+def downgrade():
+
+    op.drop_table("users")
+```
+
+Means
+
+Undo
+
+Whatever
+
+upgrade()
+
+did.
+
+---
+
+# Think Like CTRL + Z
+
+Upgrade
+
+```text
+Old Version
+
+↓
+
+New Version
+```
+
+Downgrade
+
+```text
+New Version
+
+↓
+
+Old Version
+```
+
+Exactly
+
+Undo.
+
+---
+
+# Complete Flow
+
+Suppose
+
+Model
+
+```python
+class User(Base):
+```
+
+↓
+
+Alembic
+
+↓
+
+Creates Migration
+
+↓
+
+```python
+def upgrade():
+
+    op.create_table(...)
+```
+
+↓
+
+Later
+
+Run
+
+```bash
+alembic upgrade head
+```
+
+↓
+
+Database
+
+```text
+users
+```
+
+created.
+
+---
+
+# Very Important Concept
+
+Migration File is
+
+NOT SQL.
+
+It is
+
+Python.
+
+Example
+
+```python
+op.create_table(...)
+```
+
+Later Alembic converts it into
+
+```sql
+CREATE TABLE users(
+...
 )
-l
-i
-m
-i
-t
-a
-n
-d
-limitandskip Stages - Pagination
-The $limit and $skip stages control how many documents are returned and which documents to skip, essential for pagination.
+```
 
-Basic $limit:
+and executes it.
 
-db.products.aggregate([
-  { $limit: 10 }
-])
-Returns only the first 10 documents.
+So we write
 
-Combining sort and limit:
+Python
 
-db.products.aggregate([
-  { $sort: { price: -1 } },
-  { $limit: 5 }
-])
-Gets the 5 most expensive products.
+Alembic executes
 
-Basic $skip:
+SQL.
 
-db.products.aggregate([
-  { $skip: 20 }
-])
-Skips the first 20 documents and returns the rest.
+---
 
-Pagination with 
-s
-k
-i
-p
-a
-n
-d
-skipandlimit:
+# Student Analogy
 
-const pageSize = 10
-const pageNumber = 3
+Imagine
 
-db.products.aggregate([
-  { $sort: { _id: 1 } },
-  { $skip: (pageNumber - 1) * pageSize },
-  { $limit: pageSize }
-])
-Retrieves page 3 with 10 items per page (items 21-30).
+You write
 
-Complete pagination pipeline:
+English
 
-function getPage(page, pageSize) {
-  return db.products.aggregate([
-    { $match: { inStock: true } },
-    { $sort: { price: 1 } },
-    { $skip: (page - 1) * pageSize },
-    { $limit: pageSize }
-  ])
-}
-Order of 
-s
-k
-i
-p
-a
-n
-d
-skipandlimit:
+↓
 
-// These produce the same result
-db.products.aggregate([
-  { $skip: 10 },
-  { $limit: 5 }
-])
+Google Translate
 
-db.products.aggregate([
-  { $limit: 5 },
-  { $skip: 10 }
-])
+↓
 
-// MongoDB optimizes to: skip first, then limit
-Pagination with filters:
+Telugu
 
-db.products.aggregate([
-  { $match: { 
-    category: "Electronics",
-    price: { $lt: 1000 }
-  }},
-  { $sort: { rating: -1 } },
-  { $skip: 20 },
-  { $limit: 10 }
-])
-Getting total count for pagination:
+Similarly
 
-// Get total matching documents
-const total = db.products.countDocuments({ 
-  category: "Electronics" 
-})
+You write
 
-const pageSize = 10
-const totalPages = Math.ceil(total / pageSize)
+```python
+op.create_table()
+```
 
-// Get specific page
-const results = db.products.aggregate([
-  { $match: { category: "Electronics" } },
-  { $sort: { price: 1 } },
-  { $skip: 0 },
-  { $limit: pageSize }
-])
-Using $facet for count and results:
+↓
 
-db.products.aggregate([
-  { $match: { category: "Electronics" } },
-  { $facet: {
-    metadata: [
-      { $count: "total" }
-    ],
-    data: [
-      { $sort: { price: 1 } },
-      { $skip: 0 },
-      { $limit: 10 }
-    ]
-  }}
-])
-Returns both total count and paginated results in one query.
+Alembic translates
 
-Performance considerations:
+↓
 
-// Inefficient: Large skip values
-db.products.aggregate([
-  { $skip: 100000 },
-  { $limit: 10 }
-])
+```sql
+CREATE TABLE
+```
 
-// Better: Range-based pagination
-db.products.aggregate([
-  { $match: { _id: { $gt: lastSeenId } } },
-  { $sort: { _id: 1 } },
-  { $limit: 10 }
-])
-Large skip values are slow. For deep pagination, use range queries instead.
+↓
 
-Conclusion
-Understanding the Aggregation Framework basics provides the foundation for complex data processing in MongoDB. The aggregation pipeline concept transforms documents through sequential stages, with each stage performing specific operations. The $match stage filters documents early in the pipeline for efficiency, leveraging indexes when possible. The $project stage reshapes output by including, excluding, renaming, or computing fields. The $sort stage orders results by one or more fields, working most efficiently with indexed fields. The $limit and $skip stages enable pagination by controlling result set size and position. Combining these fundamental stages creates powerful data processing pipelines that filter, transform, and organize data according to application needs. Whether building reports, APIs, or data analytics, mastering these basic aggregation stages is essential for effective MongoDB development. In the next module, we'll explore advanced aggregation stages like $group, $unwind, and others that enable even more sophisticated data transformations.
+MySQL executes it.
+
+---
+
+# Industry Workflow
+
+Developer writes model
+
+↓
+
+Runs
+
+```bash
+alembic revision --autogenerate -m "Create users table"
+```
+
+↓
+
+Reviews migration file
+
+↓
+
+Commits migration to Git
+
+↓
+
+Another developer pulls code
+
+↓
+
+Runs
+
+```bash
+alembic upgrade head
+```
+
+↓
+
+Everyone gets the same database schema.
+
+---
+
+# What We Learned Today
+
+* Why `revision --autogenerate` is used.
+* What `revision` means.
+* What `--autogenerate` does internally.
+* Why the `-m` message is useful.
+* How Alembic compares the database with `Base.metadata`.
+* The purpose of `revision` and `down_revision`.
+* The role of `upgrade()` and `downgrade()`.
+* Why migration files are Python code instead of raw SQL.
+
+At this point, we have **generated** a migration, but we have **not yet changed the database**.
+
+---
+
+# Next Lesson
+
+We'll execute the migration using:
+
+```bash
+alembic upgrade head
+```
+
+and explain:
+
+* What `head` means
+* How the `alembic_version` table is created
+* What SQL Alembic actually executes
+* How to verify the changes in MySQL
+* The complete migration lifecycle from generation to database update.
