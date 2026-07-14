@@ -1,196 +1,196 @@
-Excellent. Before we continue, I want to make one architectural decision that will significantly improve the rest of the course.
+# Backend Development with FastAPI + MongoDB
 
-## We are going to restart Module 4 from an Industry Standard Architecture.
+# **Module 4 — Part 2**
 
-**Reason:**
+# **MongoDB Relationships (One-to-Many)**
 
-The code we wrote in Module 3 was good for learning CRUD, but before adding Users, Authentication, JWT, Comments, etc., we should fix the architecture.
+## **Connecting Users and Skills**
 
-For example, currently our code has issues like:
-
-* API directly calling Service
-* Service returning raw MongoDB results
-* No Dependency Injection
-* No Repository Interfaces
-* No Generic Response Models
-* No Timestamp fields
-* No Base Models
-* No Configurable MongoDB collections
-
-If we continue building on this, we'll have to rewrite many files during Authentication.
-
-So we'll refactor **once**, then continue building professionally.
+> ⭐ **This is where our database starts behaving like a real-world application.**
+>
+> Until now:
+>
+> * Users are stored.
+> * Skills are stored.
+>
+> But they have **no relationship**.
+>
+> Today, we'll connect them.
 
 ---
 
-# Module 4 — Part 2
+# 1. Learning Objectives
 
-# Production Refactoring (Industry Standard)
+After this lesson, you will be able to:
 
-## Goal
-
-After this module, our architecture will be:
-
-```text
-Client
-    │
-    ▼
-Router
-    │
-    ▼
-Dependency Injection
-    │
-    ▼
-Service
-    │
-    ▼
-Repository
-    │
-    ▼
-MongoDB
-```
-
-This is the architecture we'll use for the rest of the course.
+* Create relationships in MongoDB
+* Store references using ObjectId
+* Validate parent-child relationships
+* Understand foreign keys in MongoDB
+* Modify existing collections
+* Design scalable data models
 
 ---
 
-# Step 1
+# 2. Current Database
 
-## Updated Project Structure
+Currently our database looks like this:
 
-```text
-skillhub-api/
-│
-├── app/
-│
-├── api/
-│   ├── skills.py
-│   ├── users.py
-│
-├── core/
-│   ├── config.py
-│
-├── db/
-│   ├── database.py
-│
-├── dependencies/
-│   ├── skill_dependencies.py
-│   └── user_dependencies.py
-│
-├── models/
-│
-├── repositories/
-│   ├── skill_repository.py
-│   └── user_repository.py
-│
-├── schemas/
-│   ├── common_schema.py     ⭐ NEW
-│   ├── skill_schema.py
-│   └── user_schema.py
-│
-├── services/
-│   ├── skill_service.py
-│   └── user_service.py
-│
-├── utils/
-│
-├── exceptions/
-│
-└── main.py
-```
-
----
-
-# Step 2
-
-## NEW FILE
-
-```text
-app/schemas/common_schema.py
-```
-
-This file will be used everywhere.
-
----
-
-## COMPLETE CODE
-
-```python
-from datetime import datetime
-
-from pydantic import BaseModel
-
-
-class TimestampSchema(BaseModel):
-
-    created_at: datetime
-
-    updated_at: datetime
-```
-
----
-
-## Why?
-
-Every collection in our application will have
-
-* Users
-* Skills
-* Comments
-* Bookmarks
-* Categories
-
-All of them need
-
-```text
-created_at
-
-updated_at
-```
-
-Instead of repeating
-
-```python
-created_at
-
-updated_at
-```
-
-inside every schema,
-
-we inherit.
-
----
-
-Example later
-
-```python
-class SkillResponse(
-    TimestampSchema
-)
-```
-
-Automatically gets
-
-```text
-created_at
-
-updated_at
-```
-
----
-
-# Step 3
-
-## Update Skill Document
-
-From now on
-
-Every Skill document becomes
+## Users Collection
 
 ```json
 {
-    "_id":"...",
+    "_id": ObjectId("U1"),
+    "full_name": "Narendar Reddy",
+    "email": "narendar@gmail.com"
+}
+```
+
+Another user
+
+```json
+{
+    "_id": ObjectId("U2"),
+    "full_name": "Rahul",
+    "email": "rahul@gmail.com"
+}
+```
+
+---
+
+## Skills Collection
+
+```json
+{
+    "_id": ObjectId("S1"),
+    "name": "Python",
+    "category": "Backend"
+}
+```
+
+Question:
+
+Who owns Python?
+
+Nobody knows.
+
+This is a bad database design.
+
+---
+
+# 3. Goal
+
+We want this:
+
+```text
+Users
+──────────────
+
+Narendar
+      │
+      │
+      ▼
+Python
+FastAPI
+MongoDB
+
+Rahul
+     │
+     ▼
+Java
+Spring Boot
+Docker
+```
+
+One User
+
+↓
+
+Many Skills
+
+---
+
+# 4. Database Design
+
+Instead of
+
+```json
+{
+    "name":"Python"
+}
+```
+
+We'll store
+
+```json
+{
+    "name":"Python",
+
+    "user_id":ObjectId("U1")
+}
+```
+
+Now MongoDB knows
+
+Python belongs to User U1.
+
+---
+
+# 5. Visual Architecture
+
+```text
+Users Collection
+
++----------------------+
+| _id = U1             |
+| Narendar             |
++----------------------+
+
+          ▲
+          │
+          │ user_id
+          │
+
++----------------------+
+| Python               |
++----------------------+
+
++----------------------+
+| FastAPI              |
++----------------------+
+
++----------------------+
+| Docker               |
++----------------------+
+```
+
+This is called
+
+**Reference Relationship**
+
+---
+
+# 6. Update Skill Document
+
+Old
+
+```json
+{
+    "_id": ObjectId(),
+
+    "name":"Python",
+
+    "category":"Backend",
+
+    "level":"Advanced"
+}
+```
+
+New
+
+```json
+{
+    "_id": ObjectId(),
 
     "name":"Python",
 
@@ -200,300 +200,291 @@ Every Skill document becomes
 
     "experience":2,
 
-    "user_id":"...", ⭐
-
-    "created_at":"2026-07-14T10:30:00",
-
-    "updated_at":"2026-07-14T10:30:00"
+    "user_id":ObjectId("6868abc")
 }
+```
+
+Only one new field.
+
+But this field changes everything.
+
+---
+
+# 7. Update Request Schema
+
+Open
+
+```text
+schemas/
+
+skill_schema.py
+```
+
+Update
+
+```python
+from pydantic import BaseModel, Field
+
+
+class SkillCreate(BaseModel):
+
+    name: str = Field(..., min_length=2)
+
+    category: str
+
+    level: str
+
+    experience: int = Field(..., ge=0)
+
+    user_id: str
+```
+
+---
+
+# Why String?
+
+Frontend sends
+
+```json
+{
+"user_id":"68683abc..."
+}
+```
+
+NOT
+
+```python
+ObjectId(...)
+```
+
+Backend converts it.
+
+---
+
+# 8. Update Response Schema
+
+```python
+class SkillResponse(BaseModel):
+
+    id: str
+
+    name: str
+
+    category: str
+
+    level: str
+
+    experience: int
+
+    user_id: str
+```
+
+---
+
+# 9. Serializer Update
+
+Open
+
+```text
+utils/
+
+serializer.py
+```
+
+Update
+
+```python
+def skill_serializer(skill):
+
+    return {
+
+        "id":str(skill["_id"]),
+
+        "name":skill["name"],
+
+        "category":skill["category"],
+
+        "level":skill["level"],
+
+        "experience":skill["experience"],
+
+        "user_id":str(skill["user_id"])
+    }
 ```
 
 Notice
 
-Now
-
-Every Skill has
-
-* Owner
-* Created Time
-* Updated Time
-
-Exactly like real applications.
+Both IDs become strings.
 
 ---
 
-# Step 4
+# 10. Validate User Exists
 
-## Repository Responsibility Changes
+Question
 
-Current Repository
+What if client sends
 
 ```text
-Insert
-
-Read
-
-Update
-
-Delete
+user_id = 12345
 ```
 
-Good.
+and that user doesn't exist?
 
-But
+Should backend still create the skill?
 
-Repository should NEVER
+No.
 
-* Validate data
-* Check duplicates
-* Raise HTTPException
-
-Repository should ONLY
-
-communicate with MongoDB.
-
-Very important interview point.
+That would create invalid data.
 
 ---
 
-# Step 5
+# 11. Service Layer
 
-## Service Responsibility
+This is **business logic**.
 
-Service should now handle
+Perfect place.
+
+Open
 
 ```text
-Duplicate Check
+services/
 
-↓
-
-Business Validation
-
-↓
-
-Owner Validation
-
-↓
-
-Timestamp Creation
-
-↓
-
-Repository
+skill_service.py
 ```
-
-The Service becomes the "brain".
 
 ---
 
-# Step 6
-
-## Dependency Injection
-
-Instead of
+Import
 
 ```python
-skill_service
-```
+from bson import ObjectId
 
-being imported everywhere,
+from fastapi import HTTPException
 
-later we'll use
-
-```python
-Depends(
-    get_skill_service
+from app.repositories.user_repository import (
+    user_repository
 )
 ```
 
-Exactly like
+---
 
-FastAPI's
+# 12. Validate User
+
+Before saving
 
 ```python
-Depends(get_current_user)
+user = await user_repository.get_by_id(
+    ObjectId(skill.user_id)
+)
 ```
 
-during Authentication.
+Wait...
 
-So we are preparing for JWT.
+Repository doesn't have
+
+```python
+get_by_id()
+```
+
+Let's create it.
 
 ---
 
-# Step 7
+# 13. Update User Repository
 
-## Better API Responses
+```python
+async def get_by_id(
+    self,
+    object_id
+):
 
-Current
+    return await database.users.find_one(
 
-```json
-{
-"success":true
-}
+        {
+
+            "_id":object_id
+
+        }
+    )
 ```
 
-Later every API will return
-
-```json
-{
-    "success":true,
-
-    "message":"Skill Created",
-
-    "data":{
-
-    },
-
-    "meta":{
-
-    }
-}
-```
-
-This format will never change again.
+Done.
 
 ---
 
-# Step 8
-
-## MongoDB Collections
-
-Instead of
+# 14. Continue Service
 
 ```python
-database.skills
+if user is None:
+
+    raise HTTPException(
+
+        status_code=404,
+
+        detail="User Not Found"
+    )
 ```
 
-everywhere,
+Excellent.
 
-We'll create
+Now
+
+Only existing users can own skills.
+
+---
+
+# 15. Save Skill
+
+Convert
 
 ```python
-database["skills"]
+data = skill.model_dump()
 ```
 
-Reason
+Now
 
-Later
+Convert
 
-Collection names can come from
+```python
+data["user_id"] = ObjectId(
+    skill.user_id
+)
+```
+
+Why?
+
+Because MongoDB stores
+
+```python
+ObjectId(...)
+```
+
+NOT
+
+```python
+"68683..."
+```
+
+---
+
+Now save
+
+```python
+await repository.create(data)
+```
+
+Done.
+
+---
+
+# 16. Complete Flow
 
 ```text
-.env
-```
-
-Useful for
-
-* Testing
-* Development
-* Production
-
----
-
-# Step 9
-
-## Users
-
-Now we're finally ready.
-
-Next lesson
-
-We'll build
-
-```
-Users
-```
-
-professionally.
-
-Including
-
-```
-Repository
-
-↓
-
-Service
-
-↓
-
-Dependency
-
-↓
-
-API
-
-↓
-
-Response Model
-
-↓
-
-Serializer
-
-↓
-
-Timestamps
-
-↓
-
-Relationship Ready
-```
-
----
-
-# Course Update
-
-From now on, **every lesson will follow this exact format**:
-
-## 1. Updated Project Structure
-
-(Complete tree)
-
----
-
-## 2. New Files
-
-Example
-
-```
-Create
-
-app/repositories/user_repository.py
-```
-
----
-
-## 3. Updated Files
-
-Example
-
-```
-Update
-
-app/api/users.py
-```
-
----
-
-## 4. Complete Code
-
-**Entire file**
-
-Not snippets.
-
----
-
-## 5. Line-by-Line Explanation
-
-Every new concept explained.
-
----
-
-## 6. Flow Diagram
-
-```
 Client
+
+↓
+
+POST /skills
 
 ↓
 
@@ -505,51 +496,506 @@ Service
 
 ↓
 
+Check User Exists
+
+↓
+
+Yes
+
+↓
+
+Convert user_id
+
+↓
+
 Repository
 
 ↓
 
 MongoDB
+
+↓
+
+Skill Saved
+```
+
+Beautiful.
+
+---
+
+# 17. Invalid Flow
+
+```text
+Client
+
+↓
+
+POST /skills
+
+↓
+
+User Doesn't Exist
+
+↓
+
+404
+
+↓
+
+Nothing Saved
+```
+
+This protects database integrity.
+
+---
+
+# 18. Testing
+
+Create User
+
+```http
+POST /users
+```
+
+↓
+
+Returns
+
+```text
+68682abc
+```
+
+Now
+
+Create Skill
+
+```json
+{
+"name":"Python",
+
+"category":"Backend",
+
+"level":"Advanced",
+
+"experience":2,
+
+"user_id":"68682abc"
+}
+```
+
+Success.
+
+---
+
+Try
+
+```json
+"user_id":"123456"
+```
+
+Response
+
+```json
+{
+"success":false,
+
+"message":"User Not Found"
+}
+```
+
+Excellent.
+
+---
+
+# 19. Database
+
+Users
+
+```json
+{
+"_id":ObjectId("U1"),
+
+"full_name":"Narendar"
+}
+```
+
+Skills
+
+```json
+{
+"name":"Python",
+
+"user_id":ObjectId("U1")
+}
+```
+
+Relationship established.
+
+---
+
+# 20. Fetch User Skills
+
+Question
+
+How do we get
+
+Narendar's Skills?
+
+Very simple.
+
+MongoDB
+
+```python
+.find(
+
+{
+
+"user_id":ObjectId(user_id)
+
+}
+)
+```
+
+Returns
+
+```text
+Python
+
+FastAPI
+
+Docker
+```
+
+We'll build this API today.
+
+---
+
+# 21. Repository
+
+Add
+
+```python
+async def get_by_user(
+    self,
+    object_id
+):
+
+    return await (
+
+        database.skills
+
+        .find(
+
+            {
+
+                "user_id":object_id
+
+            }
+
+        )
+
+        .to_list(length=None)
+
+    )
 ```
 
 ---
 
-## 7. Swagger Testing
+# 22. Service
 
-Request
+```python
+async def get_user_skills(
+    self,
+    user_id
+):
 
-Response
+    return await repository.get_by_user(
 
-Expected MongoDB Output
+        ObjectId(user_id)
 
----
-
-## 8. Interview Questions
-
----
-
-## 9. Assignments
-
----
-
-## 10. Mini Challenge
+    )
+```
 
 ---
 
-## 11. Summary
+# 23. API
+
+```python
+@router.get(
+
+"/user/{user_id}"
+
+)
+async def get_user_skills(
+
+    user_id:str
+
+):
+
+    skills = await skill_service.get_user_skills(
+
+        user_id
+
+    )
+
+    return skill_serializer_list(
+
+        skills
+
+    )
+```
+
+Swagger
+
+```
+GET
+
+/skills/user/{user_id}
+```
+
+Amazing.
 
 ---
 
-# ⚠️ Important Note
+# 24. API Testing
 
-At this point, because we've changed the teaching format, the next lesson (**Users Module**) will require updating **multiple existing files** (`main.py`, schemas, repositories, services, APIs, etc.).
+Create
 
-That means the response will be **too large to fit in a single ChatGPT message**.
+Narendar
 
-So starting with the next lesson, I'll split it like this:
+↓
 
-* **Part A:** Project structure + all new/updated schemas + complete code.
-* **Part B:** Repositories + Services + complete code.
-* **Part C:** APIs + `main.py` updates + testing + explanations.
+Python
 
-This way, you'll always receive **complete runnable files** without missing any code or having to guess where changes belong. This is much closer to how a real project evolves.
+↓
+
+FastAPI
+
+↓
+
+MongoDB
+
+Create
+
+Rahul
+
+↓
+
+Java
+
+↓
+
+Spring
+
+↓
+
+Docker
+
+Now
+
+```http
+GET /skills/user/U1
+```
+
+Returns
+
+```text
+Python
+
+FastAPI
+
+MongoDB
+```
+
+Perfect.
+
+---
+
+# 25. Current Architecture
+
+```text
+Users
+
+       ▲
+
+       │
+
+       │
+
+Skills
+
+       ▲
+
+       │
+
+Service Validation
+
+       ▲
+
+       │
+
+Repository
+
+       ▲
+
+       │
+
+MongoDB
+```
+
+Our database is becoming relational while still using MongoDB.
+
+---
+
+# 26. Common Errors
+
+### Invalid ObjectId
+
+```
+abc123
+```
+
+Use our `validate_object_id()` utility before converting to `ObjectId`.
+
+---
+
+### Forget Conversion
+
+Wrong
+
+```python
+"user_id":"6868"
+```
+
+Correct
+
+```python
+"user_id":ObjectId(...)
+```
+
+---
+
+### Skip User Validation
+
+Then
+
+Skills may reference users that don't exist.
+
+Bad database.
+
+---
+
+# 27. Interview Questions
+
+1. What is a One-to-Many relationship?
+2. Why store `user_id` inside `skills`?
+3. Why validate parent records before inserting child records?
+4. Difference between Embedding and Referencing?
+5. Why convert string IDs into `ObjectId`?
+6. How do you fetch all skills belonging to one user?
+
+---
+
+# 28. Assignment
+
+Implement:
+
+* `user_id` in the Skill schema.
+* User validation in the Service Layer.
+* `GET /skills/user/{user_id}` endpoint.
+* Insert two users and at least three skills for each.
+* Verify that each user only receives their own skills.
+
+---
+
+# 29. Mini Challenge
+
+Add a new endpoint:
+
+```http
+GET /users/{user_id}/skills/count
+```
+
+Expected response:
+
+```json
+{
+    "user_id": "68682abc...",
+    "total_skills": 6
+}
+```
+
+**Hint:** Add a repository method using:
+
+```python
+count_documents(
+    {
+        "user_id": object_id
+    }
+)
+```
+
+---
+
+# 30. Best Practices
+
+* Always validate referenced documents before saving child records.
+* Store references as `ObjectId` in MongoDB, not strings.
+* Keep relationship validation in the Service Layer.
+* Never trust IDs sent by clients without validation.
+* Design collections to support future authentication.
+
+---
+
+# 31. Summary
+
+Today we transformed SkillHub from independent collections into a **connected data model**.
+
+We implemented:
+
+* ✅ One-to-Many relationship (`User → Skills`)
+* ✅ `user_id` reference
+* ✅ Parent validation
+* ✅ Fetch skills by user
+* ✅ Relationship-aware service logic
+
+Our database now closely resembles what you'll see in real production applications.
+
+---
+
+# 🚀 Next Lesson (Very Important)
+
+Our current relationship has one limitation:
+
+```http
+GET /skills/user/{user_id}
+```
+
+The frontend gets only the skills.
+
+But often the frontend wants:
+
+```json
+{
+    "user": {
+        "full_name": "Narendar Reddy",
+        "email": "narendar@gmail.com"
+    },
+    "skills": [
+        {
+            "name": "Python"
+        },
+        {
+            "name": "FastAPI"
+        }
+    ]
+}
+```
+
+To build this efficiently, we'll learn **MongoDB Aggregation Framework**—specifically:
+
+* `$lookup`
+* `$match`
+* `$project`
+
+These allow MongoDB to combine data from multiple collections, similar to SQL joins, while staying within MongoDB's document model. This is one of the most valuable MongoDB skills for backend developers.
