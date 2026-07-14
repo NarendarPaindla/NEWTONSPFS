@@ -3007,6 +3007,609 @@ We'll build the **complete `app/api/skills.py` router**, including:
 
 After that, you'll have a complete, synchronized SkillHub API that serves as the foundation for **JWT Authentication** and advanced **MongoDB Aggregation (`$lookup`, `$group`, `$unwind`)**.
 
+Excellent. This completes the **SkillHub v1.0** project.
+
+After this lesson, your project will have:
+
+* ✅ Complete Users Module
+* ✅ Complete Skills Module
+* ✅ CRUD
+* ✅ Pagination
+* ✅ Filtering
+* ✅ Searching
+* ✅ Sorting
+* ✅ MongoDB Aggregation (`$match`, `$project`)
+* ✅ Repository Pattern
+* ✅ Service Layer
+* ✅ Production Architecture
+
+---
+
+# Part 4C — `app/api/skills.py`
+
+---
+
+## Complete Imports
+
+```python
+from typing import Annotated
+
+from fastapi import APIRouter
+from fastapi import HTTPException
+from fastapi import Query
+from fastapi import status
+
+from app.core.config import settings
+
+from app.schemas.skill_schema import (
+    SkillCreate,
+    SkillUpdate
+)
+
+from app.services.skill_service import (
+    skill_service
+)
+
+from app.utils.object_id import (
+    validate_object_id
+)
+
+from app.utils.responses import (
+    success_response
+)
+
+from app.utils.pagination import (
+    paginated_response
+)
+
+from app.utils.serializer import (
+    skill_serializer,
+    skill_serializer_list
+)
+```
+
+---
+
+## Router
+
+```python
+router = APIRouter(
+    prefix=f"{settings.api_prefix}/skills",
+    tags=["Skills"]
+)
+```
+
+---
+
+# Create Skill
+
+```python
+@router.post(
+    "/",
+    status_code=status.HTTP_201_CREATED
+)
+async def create_skill(
+    skill: SkillCreate
+):
+
+    result = await skill_service.create_skill(
+        skill
+    )
+
+    return success_response(
+        "Skill Created Successfully",
+        {
+            "id": str(result.inserted_id)
+        }
+    )
+```
+
+---
+
+# Get All Skills
+
+```python
+@router.get("/")
+async def get_skills(
+
+    page: Annotated[
+        int,
+        Query(ge=1)
+    ] = 1,
+
+    limit: Annotated[
+        int,
+        Query(
+            ge=1,
+            le=100
+        )
+    ] = 10,
+
+    category: str | None = None,
+
+    level: str | None = None,
+
+    search: str | None = None,
+
+    sort: str = "name",
+
+    order: str = "asc"
+
+):
+
+    result = await skill_service.get_all_skills(
+
+        page=page,
+
+        limit=limit,
+
+        category=category,
+
+        level=level,
+
+        search=search,
+
+        sort=sort,
+
+        order=order
+
+    )
+
+    return paginated_response(
+
+        message="Skills fetched successfully",
+
+        data=skill_serializer_list(
+            result["skills"]
+        ),
+
+        page=result["page"],
+
+        limit=result["limit"],
+
+        total_records=result["total_records"],
+
+        total_pages=result["total_pages"],
+
+        has_next=result["has_next"],
+
+        has_previous=result["has_previous"]
+
+    )
+```
+
+---
+
+# Get Skill By ID
+
+```python
+@router.get("/{skill_id}")
+async def get_skill(
+    skill_id: str
+):
+
+    object_id = validate_object_id(
+        skill_id
+    )
+
+    if object_id is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid Skill ID"
+        )
+
+    skill = await skill_service.get_skill(
+        object_id
+    )
+
+    return success_response(
+        "Skill fetched successfully",
+        skill_serializer(skill)
+    )
+```
+
+---
+
+# Update Skill
+
+```python
+@router.put("/{skill_id}")
+async def update_skill(
+    skill_id: str,
+    skill: SkillUpdate
+):
+
+    object_id = validate_object_id(
+        skill_id
+    )
+
+    if object_id is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid Skill ID"
+        )
+
+    updated_skill = await skill_service.update_skill(
+        object_id,
+        skill
+    )
+
+    return success_response(
+        "Skill Updated Successfully",
+        skill_serializer(updated_skill)
+    )
+```
+
+---
+
+# Delete Skill
+
+```python
+@router.delete(
+    "/{skill_id}",
+    status_code=status.HTTP_204_NO_CONTENT
+)
+async def delete_skill(
+    skill_id: str
+):
+
+    object_id = validate_object_id(
+        skill_id
+    )
+
+    if object_id is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid Skill ID"
+        )
+
+    await skill_service.delete_skill(
+        object_id
+    )
+```
+
+---
+
+# Get Skills By User
+
+```python
+@router.get("/user/{user_id}")
+async def get_user_skills(
+    user_id: str
+):
+
+    skills = await skill_service.get_user_skills(
+        user_id
+    )
+
+    return success_response(
+        "User Skills fetched successfully",
+        skill_serializer_list(skills)
+    )
+```
+
+---
+
+# Get User Skill Count
+
+A cleaner route than our earlier version is:
+
+```python
+@router.get("/user/{user_id}/count")
+async def get_user_skill_count(
+    user_id: str
+):
+
+    total = await skill_service.get_user_skill_count(
+        user_id
+    )
+
+    return success_response(
+        "Skill count fetched successfully",
+        {
+            "user_id": user_id,
+            "total_skills": total
+        }
+    )
+```
+
+This produces:
+
+```http
+GET /api/v1/skills/user/{user_id}/count
+```
+
+which is more RESTful and avoids repeating `/users/.../skills`.
+
+---
+
+# Aggregation API
+
+## Backend Skills
+
+```python
+@router.get("/category/backend")
+async def backend_skills():
+
+    skills = await skill_service.get_backend_skills()
+
+    return success_response(
+        "Backend Skills",
+        skill_serializer_list(skills)
+    )
+```
+
+---
+
+## Backend Summary
+
+```python
+@router.get("/category/backend/summary")
+async def backend_summary():
+
+    data = await skill_service.backend_skill_summary()
+
+    return success_response(
+        "Backend Skill Summary",
+        data
+    )
+```
+
+---
+
+# Update `main.py`
+
+Register the Skills router.
+
+```python
+from app.api.skills import router as skill_router
+
+app.include_router(skill_router)
+```
+
+Your router registrations now look like:
+
+```python
+from app.api.users import router as user_router
+from app.api.skills import router as skill_router
+
+app.include_router(user_router)
+app.include_router(skill_router)
+```
+
+---
+
+# Final Swagger
+
+```
+POST
+
+/api/v1/users
+```
+
+```
+GET
+
+/api/v1/users
+```
+
+```
+GET
+
+/api/v1/users/{id}
+```
+
+```
+PUT
+
+/api/v1/users/{id}
+```
+
+```
+DELETE
+
+/api/v1/users/{id}
+```
+
+---
+
+```
+POST
+
+/api/v1/skills
+```
+
+```
+GET
+
+/api/v1/skills
+```
+
+Supports
+
+* Pagination
+
+* Search
+
+* Filtering
+
+* Sorting
+
+---
+
+```
+GET
+
+/api/v1/skills/{id}
+```
+
+---
+
+```
+PUT
+
+/api/v1/skills/{id}
+```
+
+---
+
+```
+DELETE
+
+/api/v1/skills/{id}
+```
+
+---
+
+```
+GET
+
+/api/v1/skills/user/{user_id}
+```
+
+---
+
+```
+GET
+
+/api/v1/skills/user/{user_id}/count
+```
+
+---
+
+```
+GET
+
+/api/v1/skills/category/backend
+```
+
+---
+
+```
+GET
+
+/api/v1/skills/category/backend/summary
+```
+
+---
+
+# Final Architecture
+
+```text
+Client
+
+        │
+
+        ▼
+
+Router
+
+        │
+
+        ▼
+
+Service
+
+        │
+
+        ▼
+
+Repository
+
+        │
+
+        ▼
+
+MongoDB
+```
+
+---
+
+# Current Project Structure
+
+```text
+skillhub-api/
+
+│
+
+├── app/
+
+│   ├── api/
+│   │     users.py
+│   │     skills.py
+
+│   ├── core/
+│   │     config.py
+
+│   ├── db/
+│   │     database.py
+
+│   ├── exceptions/
+│   │     handlers.py
+
+│   ├── repositories/
+│   │     user_repository.py
+│   │     skill_repository.py
+
+│   ├── services/
+│   │     user_service.py
+│   │     skill_service.py
+
+│   ├── schemas/
+│   │     user_schema.py
+│   │     skill_schema.py
+
+│   ├── utils/
+│   │     object_id.py
+│   │     responses.py
+│   │     pagination.py
+│   │     serializer.py
+
+│   └── main.py
+
+│
+
+├── .env
+
+├── requirements.txt
+```
+
+---
+
+# Improvements We'll Make in Later Modules
+
+Before moving to JWT Authentication, there are a few refinements we'll introduce:
+
+* Add `response_model` definitions for better OpenAPI documentation.
+* Create generic response schemas (`SuccessResponse`, `PaginatedResponse`) instead of returning plain dictionaries.
+* Add MongoDB indexes (unique email, username, and optimized search fields).
+* Introduce audit fields (`created_at`, `updated_at`).
+* Move repeated validation into reusable dependencies and helper functions.
+
+These enhancements will make the project even closer to production standards while preserving the layered architecture you've built.
+
+---
+
+# 🚀 Next Module
+
+Now that SkillHub v1.0 is complete, we'll begin **Module 5 — Authentication**.
+
+We'll implement:
+
+* Password hashing with **Passlib**
+* **bcrypt**
+* User Registration with password storage
+* User Login
+* JWT Access Tokens
+* Refresh Tokens
+* `OAuth2PasswordBearer`
+* Protected APIs
+* Current User
+* Logout
+* Token Expiry
+* Secure ownership of skills (removing the need to send `user_id` in requests)
+
+This is the point where the project evolves from a public CRUD API into a secure, production-style backend.
 
 
 
